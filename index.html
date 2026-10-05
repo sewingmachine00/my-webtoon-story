@@ -1,0 +1,2781 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>웹툰 스토리 랜덤 뽑기</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Noto Sans KR", sans-serif;
+    background: #f4f6fb;
+    color: #222;
+}
+
+.container {
+    max-width: 1150px;
+    margin: auto;
+    padding: 35px 20px 70px;
+    text-align: center;
+}
+
+h1 {
+    margin: 0;
+    font-size: 40px;
+}
+
+.subtitle {
+    color: #666;
+    margin: 10px 0 32px;
+}
+
+
+/* =========================
+   카드
+========================= */
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+}
+
+.card-area {
+    position: relative;
+}
+
+.card-box {
+    perspective: 1000px;
+}
+
+.card {
+    height: 270px;
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+.card.flipped {
+    transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    border-radius: 22px;
+    backface-visibility: hidden;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding: 20px;
+
+    background: white;
+    box-shadow: 0 8px 20px rgba(0,0,0,.08);
+}
+
+.card-front {
+    border: 3px dashed #cbd0dc;
+}
+
+.card-back {
+    border: 3px solid #5b7cff;
+    transform: rotateY(180deg);
+}
+
+.icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.category {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+.question {
+    font-size: 50px;
+    color: #aaa;
+}
+
+.result {
+    font-size: 21px;
+    font-weight: bold;
+    line-height: 1.5;
+}
+
+
+/* =========================
+   카드 회전
+   ★ 180도 한 번만
+========================= */
+
+.card.roulette {
+    animation: cardSpinOnce .75s ease-in-out;
+}
+
+@keyframes cardSpinOnce {
+
+    0% {
+        transform: rotateY(0deg);
+    }
+
+    100% {
+        transform: rotateY(180deg);
+    }
+
+}
+
+
+/* =========================
+   카드 버튼
+========================= */
+
+.card-button {
+    margin-top: 12px;
+
+    padding: 9px 17px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #e9edf6;
+    color: #555;
+
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.card-button:hover {
+    background: #dce2ef;
+}
+
+
+/* =========================
+   메인 버튼
+========================= */
+
+.main-button {
+    margin-top: 32px;
+
+    padding: 17px 45px;
+
+    border: none;
+    border-radius: 15px;
+
+    background: #5b7cff;
+    color: white;
+
+    font-size: 20px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    box-shadow: 0 5px 0 #385bd1;
+}
+
+.main-button:hover {
+    transform: translateY(2px);
+}
+
+.main-button:active {
+    transform: translateY(5px);
+    box-shadow: none;
+}
+
+.main-button:disabled {
+    background: #aaa;
+    box-shadow: none;
+    cursor: default;
+}
+
+
+/* =========================
+   나의 웹툰 스토리
+========================= */
+
+.my-story {
+    display: none;
+
+    margin-top: 40px;
+
+    background: white;
+
+    padding: 30px;
+
+    border-radius: 22px;
+
+    box-shadow: 0 8px 20px rgba(0,0,0,.06);
+}
+
+.my-story h2 {
+    margin: 0 0 25px;
+    font-size: 28px;
+}
+
+.story-summary {
+    font-size: 23px;
+    line-height: 1.9;
+    font-weight: bold;
+    word-break: keep-all;
+}
+
+.story-line {
+    margin: 3px 0;
+}
+
+.story-highlight {
+    color: #5b7cff;
+}
+
+.story-twist-intro {
+    margin-top: 8px;
+}
+
+.story-twist {
+    color: #5b7cff;
+}
+
+
+/* =========================
+   컷 수 선택
+========================= */
+
+.story-setting {
+    display: none;
+
+    margin-top: 25px;
+
+    background: white;
+
+    padding: 28px;
+
+    border-radius: 22px;
+
+    box-shadow: 0 8px 20px rgba(0,0,0,.06);
+}
+
+.story-setting h2 {
+    margin-top: 0;
+}
+
+.count-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.count-button {
+    padding: 13px 28px;
+
+    border: 2px solid #d7dce8;
+
+    border-radius: 12px;
+
+    background: white;
+
+    cursor: pointer;
+
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.count-button.active {
+    background: #5b7cff;
+    color: white;
+    border-color: #5b7cff;
+}
+
+
+/* =========================
+   스토리 결과
+========================= */
+
+.story-result {
+    display: none;
+
+    margin-top: 40px;
+
+    text-align: left;
+}
+
+.story-title {
+    text-align: center;
+    font-size: 30px;
+}
+
+.story-notice {
+    background: #fff8df;
+
+    border: 2px solid #f0d878;
+
+    border-radius: 15px;
+
+    padding: 18px;
+
+    margin: 20px 0;
+
+    text-align: center;
+
+    font-weight: bold;
+
+    line-height: 1.6;
+}
+
+.cut-list {
+    display: grid;
+    gap: 15px;
+}
+
+.cut {
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 22px;
+
+    box-shadow: 0 5px 15px rgba(0,0,0,.05);
+
+    border-left: 7px solid #5b7cff;
+}
+
+.cut-number {
+    font-size: 20px;
+
+    font-weight: bold;
+
+    color: #5b7cff;
+
+    margin-bottom: 12px;
+}
+
+.cut-content {
+    line-height: 1.7;
+}
+
+.scene {
+    margin-bottom: 9px;
+}
+
+.dialogue {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.story-buttons {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.secondary-button {
+    padding: 13px 25px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #e9edf6;
+
+    cursor: pointer;
+
+    font-size: 16px;
+
+    margin: 5px;
+}
+
+.secondary-button:hover {
+    background: #dce2ef;
+}
+
+
+/* =========================
+   반응형
+========================= */
+
+@media(max-width:800px) {
+
+    .cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+@media(max-width:500px) {
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    h1 {
+        font-size: 30px;
+    }
+
+    .count-buttons {
+        flex-wrap: wrap;
+    }
+
+    .story-summary {
+        font-size: 20px;
+    }
+
+}
+</style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <h1>🎲 웹툰 스토리 뽑기</h1>
+
+    <p class="subtitle">
+        카드를 뽑고, 이야기를 만들고, 나만의 웹툰을 완성해 보세요!
+    </p>
+
+
+    <!-- =========================
+         카드
+    ========================== -->
+
+    <div class="cards">
+
+        <!-- 장소 -->
+        <div class="card-area">
+
+            <div class="card-box">
+
+                <div class="card" id="placeCard">
+
+                    <div class="card-front">
+                        <div class="icon">📍</div>
+                        <div class="category">장소</div>
+                        <div class="question">?</div>
+                    </div>
+
+                    <div class="card-back">
+                        <div class="icon">📍</div>
+                        <div class="category">장소</div>
+                        <div class="result" id="placeResult"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <button
+                class="card-button"
+                onclick="redrawOne('place')">
+                🔄 다시 뽑기
+            </button>
+
+        </div>
+
+
+        <!-- 주인공 -->
+        <div class="card-area">
+
+            <div class="card-box">
+
+                <div class="card" id="characterCard">
+
+                    <div class="card-front">
+                        <div class="icon">🧑</div>
+                        <div class="category">주인공</div>
+                        <div class="question">?</div>
+                    </div>
+
+                    <div class="card-back">
+                        <div class="icon">🧑</div>
+                        <div class="category">주인공</div>
+                        <div class="result" id="characterResult"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <button
+                class="card-button"
+                onclick="redrawOne('character')">
+                🔄 다시 뽑기
+            </button>
+
+        </div>
+
+
+        <!-- 사건 -->
+        <div class="card-area">
+
+            <div class="card-box">
+
+                <div class="card" id="eventCard">
+
+                    <div class="card-front">
+                        <div class="icon">💥</div>
+                        <div class="category">사건</div>
+                        <div class="question">?</div>
+                    </div>
+
+                    <div class="card-back">
+                        <div class="icon">💥</div>
+                        <div class="category">사건</div>
+                        <div class="result" id="eventResult"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <button
+                class="card-button"
+                onclick="redrawOne('event')">
+                🔄 다시 뽑기
+            </button>
+
+        </div>
+
+
+        <!-- 반전 -->
+        <div class="card-area">
+
+            <div class="card-box">
+
+                <div class="card" id="twistCard">
+
+                    <div class="card-front">
+                        <div class="icon">😱</div>
+                        <div class="category">반전</div>
+                        <div class="question">?</div>
+                    </div>
+
+                    <div class="card-back">
+                        <div class="icon">😱</div>
+                        <div class="category">반전</div>
+                        <div class="result" id="twistResult"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <button
+                class="card-button"
+                onclick="redrawOne('twist')">
+                🔄 다시 뽑기
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- 카드 뽑기 -->
+
+    <button
+        class="main-button"
+        id="drawButton"
+        onclick="startGame()">
+
+        🎰 카드 뽑기
+
+    </button>
+
+
+    <!-- =========================
+         나의 웹툰 스토리
+    ========================== -->
+
+    <div class="my-story" id="myStory">
+
+        <h2>
+            ✨ 나의 웹툰 스토리
+        </h2>
+
+        <div class="story-summary">
+
+            <div class="story-line">
+                <span class="story-highlight" id="storyPlace"></span>에서
+            </div>
+
+            <div class="story-line">
+                주인공은
+                <span class="story-highlight" id="storyCharacter"></span>이고,
+            </div>
+
+            <div class="story-line">
+                어느 날
+                <span class="story-highlight" id="storyEvent"></span>.
+            </div>
+
+            <div class="story-twist-intro">
+                그런데 알고 보니...
+            </div>
+
+            <div class="story-twist">
+                <span id="storyTwist"></span>!
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         컷 수
+    ========================== -->
+
+    <div
+        class="story-setting"
+        id="storySetting">
+
+        <h2>
+            🎬 몇 컷으로 만들어 볼까요?
+        </h2>
+
+        <p>
+            아래 예시는 이야기를 시작하는 데 도움을 주기 위한 것입니다.
+        </p>
+
+        <div class="count-buttons">
+
+            <button
+                class="count-button"
+                id="count4"
+                onclick="selectCount(4)">
+                4컷
+            </button>
+
+            <button
+                class="count-button active"
+                id="count6"
+                onclick="selectCount(6)">
+                6컷
+            </button>
+
+            <button
+                class="count-button"
+                id="count8"
+                onclick="selectCount(8)">
+                8컷
+            </button>
+
+        </div>
+
+        <button
+            class="main-button"
+            onclick="makeStory()">
+            ✨ 예시 스토리 보기
+        </button>
+
+    </div>
+
+
+    <!-- =========================
+         예시 스토리
+    ========================== -->
+
+    <div
+        class="story-result"
+        id="storyResult">
+
+        <h2 class="story-title">
+            🎬 웹툰 스토리 예시
+        </h2>
+
+        <div class="story-notice">
+
+            💡 이것은 웹툰 제작을 위한
+            <strong>예시 스토리</strong>입니다.<br>
+
+            그대로 따라 만들기보다
+            여러분만의 아이디어와 결말을 더해 보세요!
+
+        </div>
+
+        <div
+            class="cut-list"
+            id="cutList">
+        </div>
+
+        <div class="story-buttons">
+
+            <button
+                class="secondary-button"
+                onclick="makeStory()">
+                🔄 다른 스토리 예시 보기
+            </button>
+
+            <button
+                class="secondary-button"
+                onclick="showSetting()">
+                ✏️ 컷 수 바꾸기
+            </button>
+
+            <button
+                class="secondary-button"
+                onclick="resetGame()">
+                🎲 처음부터 다시 뽑기
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ==================================================
+   카드 데이터
+================================================== */
+
+const places = [
+    "학교 교실",
+    "급식실",
+    "학교 운동장",
+    "편의점",
+    "지하철",
+    "엘리베이터",
+    "놀이공원",
+    "PC방",
+    "도서관",
+    "미래의 학교",
+    "우주선",
+    "바닷속 도시",
+    "게임 속 세상",
+    "AI 연구소",
+    "10년 후의 우리 동네",
+    "시간이 멈춘 학교",
+    "꿈속",
+    "무인 카페",
+    "좀비가 된 도시",
+    "정체를 알 수 없는 장소"
+];
+
+
+const characters = [
+    "평범한 고등학생",
+    "외계인 전학생",
+    "말하는 AI",
+    "미래에서 온 나",
+    "말하는 고양이",
+    "게임 속 NPC",
+    "학교 선생님",
+    "유명한 아이돌",
+    "시간여행자",
+    "초능력을 숨기고 있는 학생",
+    "시험을 싫어하는 천재",
+    "무엇이든 먹는 로봇",
+    "거짓말을 못 하는 사람",
+    "하루에 한 번만 말할 수 있는 사람",
+    "내 스마트폰",
+    "갑자기 작아진 사람",
+    "갑자기 투명해진 사람",
+    "사람이 된 강아지",
+    "정체를 숨기고 있는 전학생",
+    "나와 똑같이 생긴 사람"
+];
+
+
+const events = [
+    "갑자기 시간이 멈췄다",
+    "모두의 기억이 사라졌다",
+    "시험 문제가 살아 움직이기 시작했다",
+    "스마트폰이 말을 하기 시작했다",
+    "갑자기 좀비가 나타났다",
+    "모든 사람이 거짓말을 할 수 없게 되었다",
+    "하루가 계속 반복되기 시작했다",
+    "학교가 우주선으로 변했다",
+    "급식이 갑자기 움직이기 시작했다",
+    "나와 똑같은 사람이 나타났다",
+    "갑자기 모든 사람이 나를 알아보기 시작했다",
+    "내가 게임 캐릭터가 되었다",
+    "정체불명의 상자가 나타났다",
+    "10분 뒤 지구가 멸망한다는 문자를 받았다",
+    "내가 한 말이 현실이 되기 시작했다",
+    "갑자기 초능력이 생겼다",
+    "모든 전자기기가 작동하지 않았다",
+    "하늘에서 이상한 물건이 떨어졌다",
+    "누군가 나에게 미래를 알려주었다",
+    "아무도 모르는 비밀 통로를 발견했다"
+];
+
+
+const twists = [
+    "사실 처음부터 꿈이었다",
+    "범인은 바로 나였다",
+    "AI가 사실 미래의 나였다",
+    "모든 일이 10년 전부터 계획되어 있었다",
+    "주인공이 사실 로봇이었다",
+    "외계인이 지구를 구하러 온 것이었다",
+    "시간을 멈춘 사람은 친구였다",
+    "진짜 주인공은 옆에 있던 고양이였다",
+    "사건은 사실 수행평가였다",
+    "모두가 알고 있었는데 나만 몰랐다",
+    "미래의 내가 보내온 메시지였다",
+    "내가 만든 이야기가 현실이 되고 있었다",
+    "사실 아무 일도 일어나지 않았다",
+    "가장 평범해 보였던 사람이 범인이었다",
+    "AI가 나보다 학교생활을 더 잘하고 있었다",
+    "처음의 장면으로 다시 돌아왔다",
+    "주인공만 시간이 거꾸로 흐르고 있었다",
+    "모든 사람이 NPC였다",
+    "진짜 세계는 따로 있었다",
+    "마지막 장면에서 독자에게 말을 걸었다"
+];
+
+
+let selected = {
+    place: "",
+    character: "",
+    event: "",
+    twist: ""
+};
+
+let storyCount = 6;
+
+
+/* ==================================================
+   랜덤
+================================================== */
+
+function randomItem(array) {
+
+    return array[
+        Math.floor(Math.random() * array.length)
+    ];
+
+}
+
+
+/* ==================================================
+   효과음
+================================================== */
+
+let audioContext;
+
+function playSound(type) {
+
+    try {
+
+        if (!audioContext) {
+
+            audioContext =
+                new (
+                    window.AudioContext ||
+                    window.webkitAudioContext
+                )();
+
+        }
+
+        const oscillator =
+            audioContext.createOscillator();
+
+        const gain =
+            audioContext.createGain();
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+
+        const now =
+            audioContext.currentTime;
+
+
+        if (type === "spin") {
+
+            oscillator.type = "sine";
+
+            oscillator.frequency.setValueAtTime(
+                250,
+                now
+            );
+
+            oscillator.frequency.exponentialRampToValueAtTime(
+                700,
+                now + 0.5
+            );
+
+            gain.gain.setValueAtTime(
+                0.05,
+                now
+            );
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.001,
+                now + 0.6
+            );
+
+            oscillator.start(now);
+            oscillator.stop(now + 0.6);
+
+        }
+
+
+        if (type === "stop") {
+
+            oscillator.type = "triangle";
+
+            oscillator.frequency.setValueAtTime(
+                500,
+                now
+            );
+
+            oscillator.frequency.exponentialRampToValueAtTime(
+                900,
+                now + 0.15
+            );
+
+            gain.gain.setValueAtTime(
+                0.15,
+                now
+            );
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.001,
+                now + 0.35
+            );
+
+            oscillator.start(now);
+            oscillator.stop(now + 0.35);
+
+        }
+
+    } catch (e) {}
+
+}
+
+
+/* ==================================================
+   카드 한 장 뽑기
+   ★ 180도 한 번만 회전
+================================================== */
+
+function drawOne(type) {
+
+    let array;
+    let cardId;
+    let resultId;
+
+
+    if (type === "place") {
+        array = places;
+        cardId = "placeCard";
+        resultId = "placeResult";
+    }
+
+    if (type === "character") {
+        array = characters;
+        cardId = "characterCard";
+        resultId = "characterResult";
+    }
+
+    if (type === "event") {
+        array = events;
+        cardId = "eventCard";
+        resultId = "eventResult";
+    }
+
+    if (type === "twist") {
+        array = twists;
+        cardId = "twistCard";
+        resultId = "twistResult";
+    }
+
+
+    const card =
+        document.getElementById(cardId);
+
+    const result =
+        document.getElementById(resultId);
+
+
+    card.classList.remove("flipped");
+    card.classList.remove("roulette");
+
+    void card.offsetWidth;
+
+
+    const finalValue =
+        randomItem(array);
+
+    selected[type] =
+        finalValue;
+
+
+    result.textContent =
+        finalValue;
+
+
+    /*
+     * 카드가 180도 한 번 회전
+     */
+
+    card.classList.add("roulette");
+
+    playSound("spin");
+
+
+    setTimeout(() => {
+
+        card.classList.remove("roulette");
+
+        card.classList.add("flipped");
+
+        playSound("stop");
+
+    }, 750);
+
+}
+
+
+/* ==================================================
+   전체 카드 뽑기
+================================================== */
+
+function startGame() {
+
+    document.getElementById(
+        "drawButton"
+    ).disabled = true;
+
+
+    document.getElementById(
+        "myStory"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "storySetting"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "storyResult"
+    ).style.display = "none";
+
+
+    drawOne("place");
+
+
+    setTimeout(() => {
+        drawOne("character");
+    }, 1100);
+
+
+    setTimeout(() => {
+        drawOne("event");
+    }, 2200);
+
+
+    setTimeout(() => {
+        drawOne("twist");
+    }, 3300);
+
+
+    setTimeout(() => {
+
+        document.getElementById(
+            "drawButton"
+        ).disabled = false;
+
+        showMyStory();
+
+    }, 4400);
+
+}
+
+
+/* ==================================================
+   카드 하나 다시 뽑기
+================================================== */
+
+function redrawOne(type) {
+
+    drawOne(type);
+
+    setTimeout(() => {
+
+        if (
+            selected.place &&
+            selected.character &&
+            selected.event &&
+            selected.twist
+        ) {
+
+            showMyStory();
+
+        }
+
+    }, 900);
+
+}
+
+
+/* ==================================================
+   나의 웹툰 스토리
+================================================== */
+
+function showMyStory() {
+
+    document.getElementById(
+        "storyPlace"
+    ).textContent =
+        selected.place;
+
+
+    document.getElementById(
+        "storyCharacter"
+    ).textContent =
+        selected.character;
+
+
+    document.getElementById(
+        "storyEvent"
+    ).textContent =
+        selected.event;
+
+
+    document.getElementById(
+        "storyTwist"
+    ).textContent =
+        selected.twist;
+
+
+    document.getElementById(
+        "myStory"
+    ).style.display = "block";
+
+
+    document.getElementById(
+        "storySetting"
+    ).style.display = "block";
+
+}
+
+
+/* ==================================================
+   컷 수 선택
+================================================== */
+
+function selectCount(count) {
+
+    storyCount = count;
+
+    document
+        .querySelectorAll(".count-button")
+        .forEach(button => {
+
+            button.classList.remove("active");
+
+        });
+
+
+    document
+        .getElementById("count" + count)
+        .classList.add("active");
+
+}
+
+
+/* ==================================================
+   예시 스토리 만들기
+================================================== */
+
+function makeStory() {
+
+    if (
+        !selected.place ||
+        !selected.character ||
+        !selected.event ||
+        !selected.twist
+    ) {
+
+        alert("먼저 카드를 뽑아 주세요!");
+
+        return;
+
+    }
+
+
+    const story =
+        generateStory(storyCount);
+
+
+    const cutList =
+        document.getElementById("cutList");
+
+
+    cutList.innerHTML = "";
+
+
+    story.forEach((cut, index) => {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "cut";
+
+
+        div.innerHTML = `
+
+            <div class="cut-number">
+                ${index + 1}컷
+            </div>
+
+            <div class="cut-content">
+
+                <div class="scene">
+                    📷 <strong>장면</strong><br>
+                    ${cut.scene}
+                </div>
+
+                <div class="scene">
+                    💡 <strong>상황</strong><br>
+                    ${cut.action}
+                </div>
+
+                <div class="dialogue">
+                    💬 ${cut.dialogue}
+                </div>
+
+            </div>
+
+        `;
+
+
+        cutList.appendChild(div);
+
+    });
+
+
+    document.getElementById(
+        "storyResult"
+    ).style.display = "block";
+
+
+    window.scrollTo({
+
+        top:
+            document.getElementById(
+                "storyResult"
+            ).offsetTop - 20,
+
+        behavior: "smooth"
+
+    });
+
+}
+
+
+/* ==================================================
+   사건 종류 확인
+================================================== */
+
+function getEventType() {
+
+    const e = selected.event;
+
+    if (e.includes("시간이 멈췄"))
+        return "time";
+
+    if (e.includes("기억"))
+        return "memory";
+
+    if (e.includes("시험 문제"))
+        return "exam";
+
+    if (e.includes("스마트폰"))
+        return "phone";
+
+    if (e.includes("좀비"))
+        return "zombie";
+
+    if (e.includes("거짓말"))
+        return "lie";
+
+    if (e.includes("반복"))
+        return "loop";
+
+    if (e.includes("우주선"))
+        return "spaceship";
+
+    if (e.includes("급식"))
+        return "food";
+
+    if (e.includes("똑같은 사람이"))
+        return "double";
+
+    if (e.includes("모든 사람이 나를"))
+        return "famous";
+
+    if (e.includes("게임 캐릭터"))
+        return "game";
+
+    if (e.includes("상자"))
+        return "box";
+
+    if (e.includes("지구가 멸망"))
+        return "end";
+
+    if (e.includes("내가 한 말"))
+        return "word";
+
+    if (e.includes("초능력"))
+        return "power";
+
+    if (e.includes("전자기기"))
+        return "electric";
+
+    if (e.includes("하늘에서"))
+        return "sky";
+
+    if (e.includes("미래"))
+        return "future";
+
+    if (e.includes("비밀 통로"))
+        return "secret";
+
+    return "normal";
+
+}
+
+
+/* ==================================================
+   ★ 사건별 스토리 패턴
+================================================== */
+
+function generateStory(count) {
+
+    const type =
+        getEventType();
+
+    const p = selected.place;
+    const c = selected.character;
+    const t = selected.twist;
+
+
+    /*
+     * 각 사건의 8컷 구조
+     *
+     * ① 상황
+     * ② 등장
+     * ③ 사건
+     * ④ 문제 확대
+     * ⑤ 해결 시도
+     * ⑥ 갈등 심화
+     * ⑦ 해결 직전
+     * ⑧ 반전
+     */
+
+
+    const stories = {
+
+
+        /* --------------------------------
+           1. 시간이 멈춤
+        -------------------------------- */
+
+        time: [
+
+            {
+                scene: `${p}의 평범한 하루`,
+                action: `${c}이(가) 평소처럼 시간을 보내고 있다.`,
+                dialogue: `"오늘도 평범하네."`
+            },
+
+            {
+                scene: `갑자기 멈춰버린 주변`,
+                action: `사람과 물건이 모두 움직임을 멈춘다.`,
+                dialogue: `"어? 왜 아무도 안 움직이지?"`
+            },
+
+            {
+                scene: `시간이 멈춘 ${p}`,
+                action: `오직 ${c}만 움직일 수 있다는 것을 알게 된다.`,
+                dialogue: `"나만 움직일 수 있는 거야?"`
+            },
+
+            {
+                scene: `움직이는 수상한 사람`,
+                action: `멀리서 시간이 멈춘 상태에서도 움직이는 사람이 보인다.`,
+                dialogue: `"잠깐! 저 사람은 움직이고 있어!"`
+            },
+
+            {
+                scene: `수상한 사람을 따라가는 ${c}`,
+                action: `그 사람이 시간 정지의 원인과 관련 있다고 생각한다.`,
+                dialogue: `"저 사람을 따라가 보자."`
+            },
+
+            {
+                scene: `시간을 멈춘 장치`,
+                action: `수상한 사람이 이상한 장치를 작동시키는 모습을 발견한다.`,
+                dialogue: `"저 장치가 시간을 멈춘 거야!"`
+            },
+
+            {
+                scene: `장치를 멈추려는 순간`,
+                action: `장치를 끄기 직전 예상하지 못한 일이 벌어진다.`,
+                dialogue: `"잠깐, 저건 뭐지?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"뭐라고?!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           2. 기억이 사라짐
+        -------------------------------- */
+
+        memory: [
+
+            {
+                scene: `${p}의 평범한 하루`,
+                action: `${c}이(가) 주변 사람들과 평소처럼 이야기한다.`,
+                dialogue: `"오늘은 평범한 하루네."`
+            },
+
+            {
+                scene: `이상하게 행동하는 사람들`,
+                action: `사람들이 서로를 알아보지 못하기 시작한다.`,
+                dialogue: `"왜 다들 서로를 모르는 거지?"`
+            },
+
+            {
+                scene: `사라진 기억`,
+                action: `모든 사람의 기억이 사라졌다는 사실을 알게 된다.`,
+                dialogue: `"설마... 나를 기억하지 못하는 거야?"`
+            },
+
+            {
+                scene: `텅 빈 기억 속`,
+                action: `사람들은 자신의 이름과 장소까지 잊어버린다.`,
+                dialogue: `"이러다 모두 아무것도 기억하지 못하겠어!"`
+            },
+
+            {
+                scene: `기억을 되찾을 단서`,
+                action: `${c}은(는) 기억을 되돌릴 수 있는 흔적을 찾아 나선다.`,
+                dialogue: `"분명 기억이 사라진 이유가 있을 거야."`
+            },
+
+            {
+                scene: `기억을 저장한 장소`,
+                action: `사라진 기억이 모여 있는 이상한 장소를 발견한다.`,
+                dialogue: `"여기에 사람들의 기억이 모여 있어!"`
+            },
+
+            {
+                scene: `기억을 되돌리려는 순간`,
+                action: `마지막 기억 하나가 예상하지 못한 사실을 보여준다.`,
+                dialogue: `"이 기억은 대체 뭐지?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"말도 안 돼!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           3. 시험 문제가 살아남
+        -------------------------------- */
+
+        exam: [
+
+            {
+                scene: `${p}의 시험 시간`,
+                action: `${c}이(가) 시험지를 받아든다.`,
+                dialogue: `"이번 시험은 제발 쉬웠으면..."` 
+            },
+
+            {
+                scene: `갑자기 움직이는 시험지`,
+                action: `시험 문제가 종이 위에서 움직이기 시작한다.`,
+                dialogue: `"어?! 문제가 움직여!"`
+            },
+
+            {
+                scene: `도망가는 시험 문제`,
+                action: `문제들이 시험지를 빠져나와 교실 곳곳으로 도망간다.`,
+                dialogue: `"시험 문제가 도망가면 어떡해!"`
+            },
+
+            {
+                scene: `점점 커지는 시험`,
+                action: `문제들이 다른 교실까지 퍼지면서 학교 전체가 시험장이 된다.`,
+                dialogue: `"이제 학교 전체가 시험장이 됐잖아!"`
+            },
+
+            {
+                scene: `문제를 잡으러 가는 ${c}`,
+                action: `${c}은(는) 문제를 하나씩 풀어야 움직임을 멈출 수 있다는 것을 알아낸다.`,
+                dialogue: `"정답을 맞히면 멈추는 건가?"`
+            },
+
+            {
+                scene: `마지막 문제`,
+                action: `가장 어려운 문제가 ${c} 앞에 나타난다.`,
+                dialogue: `"이건 진짜 모르겠는데..."` 
+            },
+
+            {
+                scene: `마지막 답을 쓰는 순간`,
+                action: `답을 적자 모든 문제가 갑자기 멈춘다.`,
+                dialogue: `"끝난 건가?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"설마 이게 수행평가였다고?!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           4. 스마트폰이 말함
+        -------------------------------- */
+
+        phone: [
+
+            {
+                scene: `${p}에서 스마트폰을 보는 ${c}`,
+                action: `평소처럼 스마트폰을 사용하고 있다.`,
+                dialogue: `"오늘 뭐 하지?"`
+            },
+
+            {
+                scene: `갑자기 켜진 스마트폰`,
+                action: `스마트폰이 스스로 화면을 켜더니 말을 하기 시작한다.`,
+                dialogue: `"잠깐... 네가 말한 거야?"`
+            },
+
+            {
+                scene: `미래를 알려주는 스마트폰`,
+                action: `스마트폰이 몇 분 뒤 일어날 일을 정확하게 알려준다.`,
+                dialogue: `"이걸 어떻게 알고 있어?"`
+            },
+
+            {
+                scene: `계속 도착하는 예언`,
+                action: `앞으로 일어날 사건들이 계속 메시지로 도착한다.`,
+                dialogue: `"이번 메시지는 너무 위험한데..."` 
+            },
+
+            {
+                scene: `미래를 바꾸려는 ${c}`,
+                action: `${c}은(는) 스마트폰이 알려준 사건을 막으려고 움직인다.`,
+                dialogue: `"이번에는 내가 바꿔 볼 거야!"`
+            },
+
+            {
+                scene: `예언과 달라진 현실`,
+                action: `행동을 바꾸자 메시지의 내용도 계속 바뀌기 시작한다.`,
+                dialogue: `"미래가 바뀌고 있어!"`
+            },
+
+            {
+                scene: `마지막 메시지`,
+                action: `스마트폰 화면에 단 하나의 문장이 나타난다.`,
+                dialogue: `"뒤를 보라고?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"그럼 지금까지의 메시지는...?"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           5. 좀비
+        -------------------------------- */
+
+        zombie: [
+
+            {
+                scene: `${p}의 평범한 하루`,
+                action: `${c}이(가) 평소처럼 시간을 보내고 있다.`,
+                dialogue: `"오늘은 별일 없겠지."`
+            },
+
+            {
+                scene: `들려오는 이상한 소리`,
+                action: `멀리서 사람들이 비명을 지르며 달려온다.`,
+                dialogue: `"뭐야! 무슨 일이야?"`
+            },
+
+            {
+                scene: `좀비의 등장`,
+                action: `갑자기 좀비들이 나타나 사람들을 쫓기 시작한다.`,
+                dialogue: `"진짜 좀비잖아!"`
+            },
+
+            {
+                scene: `좀비가 몰려온다`,
+                action: `좀비들이 점점 ${c}이(가) 있는 곳으로 몰려온다.`,
+                dialogue: `"여기까지 오고 있어!"`
+            },
+
+            {
+                scene: `도망칠 곳을 찾는 ${c}`,
+                action: `${c}은(는) 안전한 장소를 찾아 움직인다.`,
+                dialogue: `"일단 숨어야 해!"`
+            },
+
+            {
+                scene: `이상한 좀비`,
+                action: `그런데 한 좀비가 다른 좀비들을 막으며 ${c}을(를) 보호한다.`,
+                dialogue: `"잠깐... 저 좀비는 나를 지키고 있어?"`
+            },
+
+            {
+                scene: `좀비의 정체를 확인하는 순간`,
+                action: `${c}은(는) 좀비들이 나타난 진짜 이유를 알게 된다.`,
+                dialogue: `"설마 처음부터 이걸 하려고 했던 거야?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"이럴 수가!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           6. 거짓말 불가능
+        -------------------------------- */
+
+        lie: [
+
+            {
+                scene: `${p}의 평범한 하루`,
+                action: `${c}이(가) 친구들과 이야기를 나눈다.`,
+                dialogue: `"오늘도 평범하네."`
+            },
+
+            {
+                scene: `갑자기 솔직해진 사람들`,
+                action: `사람들이 갑자기 생각한 것을 그대로 말하기 시작한다.`,
+                dialogue: `"왜 다들 갑자기 솔직해졌지?"`
+            },
+
+            {
+                scene: `거짓말을 할 수 없는 세상`,
+                action: `누구도 거짓말을 할 수 없게 되었다.`,
+                dialogue: `"이제 아무도 거짓말을 못 하는 거야?"`
+            },
+
+            {
+                scene: `학교가 혼란에 빠진다`,
+                action: `사람들이 숨기고 있던 비밀까지 모두 말하면서 문제가 커진다.`,
+                dialogue: `"이건 너무 많은 비밀이 한꺼번에 나오잖아!"`
+            },
+
+            {
+                scene: `진짜 원인을 찾는 ${c}`,
+                action: `${c}은(는) 이 현상을 만든 사람을 찾아 나선다.`,
+                dialogue: `"누가 이런 일을 시작한 거지?"`
+            },
+
+            {
+                scene: `수상한 사람`,
+                action: `모두가 솔직하게 말하는 가운데 한 사람만 아무 말도 하지 않는다.`,
+                dialogue: `"왜 저 사람만 조용하지?"`
+            },
+
+            {
+                scene: `마지막 질문`,
+                action: `${c}이(가) 그 사람에게 직접 질문한다.`,
+                dialogue: `"당신이 이 일을 시작했어?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"그럼 지금까지의 말도 전부...?"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           7. 하루 반복
+        -------------------------------- */
+
+        loop: [
+
+            {
+                scene: `${p}의 평범한 아침`,
+                action: `${c}이(가) 평소와 똑같은 하루를 시작한다.`,
+                dialogue: `"오늘은 뭔가 특별한 일이 있었으면..."` 
+            },
+
+            {
+                scene: `다시 시작된 아침`,
+                action: `하루가 끝난 뒤 ${c}은(는) 다시 같은 아침에 눈을 뜬다.`,
+                dialogue: `"어...? 분명 어제도 이랬는데?"`
+            },
+
+            {
+                scene: `반복되는 하루`,
+                action: `같은 일이 계속 반복된다는 것을 깨닫는다.`,
+                dialogue: `"내가 계속 같은 하루를 보내고 있어!"`
+            },
+
+            {
+                scene: `조금씩 달라지는 반복`,
+                action: `반복될 때마다 한 가지씩 새로운 이상한 일이 생긴다.`,
+                dialogue: `"이번에는 뭔가 달라졌어."`
+            },
+
+            {
+                scene: `반복을 깨려는 ${c}`,
+                action: `${c}은(는) 평소와 다른 행동을 해 보며 반복의 규칙을 찾는다.`,
+                dialogue: `"이번에는 완전히 다르게 해 보자!"`
+            },
+
+            {
+                scene: `반복의 규칙 발견`,
+                action: `특정 행동을 해야만 다음 날로 넘어갈 수 있다는 사실을 알아낸다.`,
+                dialogue: `"이 행동이 열쇠였어!"`
+            },
+
+            {
+                scene: `마지막 반복`,
+                action: `${c}은(는) 마지막으로 한 번 더 선택해야 한다.`,
+                dialogue: `"이번에는 정말 끝내겠어."`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"또 처음으로 돌아왔다고?!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           8. 학교가 우주선
+        -------------------------------- */
+
+        spaceship: [
+
+            {
+                scene: `${p}의 평범한 수업`,
+                action: `${c}이(가) 수업을 듣고 있다.`,
+                dialogue: `"오늘도 수업이네."`
+            },
+
+            {
+                scene: `갑자기 흔들리는 학교`,
+                action: `학교 건물이 크게 흔들리기 시작한다.`,
+                dialogue: `"지진인가?!"`
+            },
+
+            {
+                scene: `우주로 올라가는 학교`,
+                action: `창밖을 보니 학교 전체가 우주로 올라가고 있다.`,
+                dialogue: `"학교가 우주선이 됐어!"`
+            },
+
+            {
+                scene: `점점 멀어지는 지구`,
+                action: `학교가 지구에서 멀어지면서 학생들이 혼란에 빠진다.`,
+                dialogue: `"이대로 가면 지구로 못 돌아가!"`
+            },
+
+            {
+                scene: `조종실을 찾는 ${c}`,
+                action: `${c}은(는) 학교를 움직이는 조종실을 찾아 나선다.`,
+                dialogue: `"누군가 이걸 조종하고 있을 거야."`
+            },
+
+            {
+                scene: `수상한 조종실`,
+                action: `조종실에는 학교와 어울리지 않는 이상한 장치가 있다.`,
+                dialogue: `"이게 학교를 움직이고 있었어!"`
+            },
+
+            {
+                scene: `지구로 돌아갈 마지막 기회`,
+                action: `${c}이(가) 조종 장치를 작동시키려는 순간 메시지가 나타난다.`,
+                dialogue: `"잠깐... 이 메시지는 뭐지?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"학교가 처음부터 알고 있었다고?!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           9. 급식이 움직임
+        -------------------------------- */
+
+        food: [
+
+            {
+                scene: `${p}의 점심시간`,
+                action: `${c}이(가) 평소처럼 급식을 받는다.`,
+                dialogue: `"오늘 급식 맛있겠다!"`
+            },
+
+            {
+                scene: `갑자기 움직이는 급식`,
+                action: `식판 위의 음식이 꿈틀거리기 시작한다.`,
+                dialogue: `"어? 방금 음식이 움직였어!"`
+            },
+
+            {
+                scene: `도망가는 급식`,
+                action: `음식들이 식판에서 뛰쳐나와 급식실을 돌아다닌다.`,
+                dialogue: `"급식이 도망간다!"`
+            },
+
+            {
+                scene: `한곳으로 모이는 음식들`,
+                action: `모든 음식이 이상하게 한 방향으로 몰려가기 시작한다.`,
+                dialogue: `"왜 전부 저쪽으로 가는 거야?"`
+            },
+
+            {
+                scene: `급식을 따라가는 ${c}`,
+                action: `${c}은(는) 음식들을 따라가 움직임의 이유를 확인한다.`,
+                dialogue: `"뭔가 목적지가 있는 것 같아."`
+            },
+
+            {
+                scene: `급식들의 비밀`,
+                action: `음식들이 한곳에서 커다란 모양을 만들고 있는 것을 발견한다.`,
+                dialogue: `"이걸 만들고 있었던 거야?"`
+            },
+
+            {
+                scene: `완성된 급식 메시지`,
+                action: `음식들이 만든 모양에 이상한 메시지가 나타난다.`,
+                dialogue: `"이건 누가 보낸 메시지야?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"설마 급식이 처음부터 알고 있었던 거야?!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           10. 똑같은 사람
+        -------------------------------- */
+
+        double: [
+
+            {
+                scene: `${p}의 평범한 하루`,
+                action: `${c}이(가) 평소처럼 하루를 보내고 있다.`,
+                dialogue: `"오늘도 별일 없겠지."`
+            },
+
+            {
+                scene: `나와 똑같은 사람`,
+                action: `갑자기 ${c}과 똑같이 생긴 사람이 나타난다.`,
+                dialogue: `"잠깐! 너 나랑 똑같잖아!"`
+            },
+
+            {
+                scene: `두 명의 ${c}`,
+                action: `주변 사람들은 누가 진짜인지 구분하지 못한다.`,
+                dialogue: `"대체 누가 진짜 나야?"`
+            },
+
+            {
+                scene: `서로를 의심하기 시작`,
+                action: `두 사람 모두 자신이 진짜라고 주장하면서 갈등이 커진다.`,
+                dialogue: `"내가 진짜라고!"`
+            },
+
+            {
+                scene: `진짜를 증명하려는 ${c}`,
+                action: `둘만 알고 있는 기억을 이용해 서로를 시험한다.`,
+                dialogue: `"이것까지 알고 있다면 정말 나라는 뜻이야."`
+            },
+
+            {
+                scene: `예상 밖의 결과`,
+                action: `두 사람 모두 똑같은 기억을 가지고 있다는 사실이 드러난다.`,
+                dialogue: `"둘 다 내 기억을 알고 있어!"`
+            },
+
+            {
+                scene: `정체를 밝히려는 순간`,
+                action: `갑자기 세 번째 사람이 나타난다.`,
+                dialogue: `"잠깐... 또 한 명이 있다고?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"그럼 진짜 나는 누구야?!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           11. 모두가 나를 알아봄
+        -------------------------------- */
+
+        famous: [
+
+            {
+                scene: `${p}의 평범한 하루`,
+                action: `${c}은(는) 아무도 자신을 모른다고 생각한다.`,
+                dialogue: `"오늘도 조용히 지나가겠지."`
+            },
+
+            {
+                scene: `갑자기 알아보는 사람들`,
+                action: `처음 보는 사람들이 ${c}의 이름을 정확하게 부른다.`,
+                dialogue: `"잠깐... 나를 어떻게 알아?"`
+            },
+
+            {
+                scene: `계속 늘어나는 사람들`,
+                action: `어디를 가도 사람들이 ${c}을(를) 알아본다.`,
+                dialogue: `"왜 모두가 나를 알고 있는 거야?"`
+            },
+
+            {
+                scene: `도망치기 시작한 ${c}`,
+                action: `사람들을 피해 숨어도 누군가 계속 찾아온다.`,
+                dialogue: `"이대로는 안 되겠어!"`
+            },
+
+            {
+                scene: `이유를 찾는 ${c}`,
+                action: `${c}은(는) 자신을 알고 있는 사람들의 공통점을 찾는다.`,
+                dialogue: `"분명 공통점이 있을 거야."`
+            },
+
+            {
+                scene: `사진 속의 ${c}`,
+                action: `오래된 사진에서 자신과 똑같은 모습이 발견된다.`,
+                dialogue: `"이 사진은 언제 찍힌 거지?"`
+            },
+
+            {
+                scene: `사진의 진실`,
+                action: `사진 속 인물이 현재의 사건과 연결되어 있다는 것을 알게 된다.`,
+                dialogue: `"설마 내가 이 사건과 관련 있는 거야?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"그래서 모두가 나를 알고 있었구나!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           12. 게임 캐릭터
+        -------------------------------- */
+
+        game: [
+
+            {
+                scene: `${p}의 평범한 하루`,
+                action: `${c}이(가) 평소처럼 하루를 보내고 있다.`,
+                dialogue: `"오늘은 뭐 하지?"`
+            },
+
+            {
+                scene: `게임 화면처럼 변한 세상`,
+                action: `주변에 체력바와 점수창이 나타난다.`,
+                dialogue: `"잠깐... 내가 게임 속에 들어온 거야?"`
+            },
+
+            {
+                scene: `게임 캐릭터가 된 ${c}`,
+                action: `눈앞에 퀘스트가 나타나고 행동까지 제한된다.`,
+                dialogue: `"이걸 깨야 원래대로 돌아가는 건가?"`
+            },
+
+            {
+                scene: `퀘스트가 점점 어려워진다`,
+                action: `실패할 때마다 게임 속 위험이 커진다.`,
+                dialogue: `"이 퀘스트 너무 어려운데!"`
+            },
+
+            {
+                scene: `퀘스트를 공략하는 ${c}`,
+                action: `${c}은(는) 게임의 규칙을 이용해 새로운 방법을 찾아낸다.`,
+                dialogue: `"게임이라면 규칙을 이용하면 돼!"`
+            },
+
+            {
+                scene: `숨겨진 스테이지`,
+                action: `공략할 수 없던 장소 뒤에서 비밀 스테이지를 발견한다.`,
+                dialogue: `"이런 곳에 숨겨진 스테이지가 있었어?"`
+            },
+
+            {
+                scene: `최종 스테이지`,
+                action: `마지막 문을 열자 자신의 모습이 화면에 나타난다.`,
+                dialogue: `"저건... 나잖아!"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"그럼 나는 게임 속 캐릭터였던 거야?!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           13. 정체불명의 상자
+        -------------------------------- */
+
+        box: [
+
+            {
+                scene: `${p}`,
+                action: `${c}이(가) 아무도 보지 못한 수상한 상자를 발견한다.`,
+                dialogue: `"이런 상자가 언제부터 있었지?"`
+            },
+
+            {
+                scene: `상자에서 들리는 소리`,
+                action: `상자 안에서 이상한 소리가 들려온다.`,
+                dialogue: `"안에서 무슨 소리가 나!"`
+            },
+
+            {
+                scene: `열리지 않는 상자`,
+                action: `상자는 어떤 방법으로도 열리지 않는다.`,
+                dialogue: `"도대체 어떻게 여는 거야?"`
+            },
+
+            {
+                scene: `상자의 변화`,
+                action: `상자가 갑자기 커지면서 주변의 물건까지 빨아들이기 시작한다.`,
+                dialogue: `"상자가 물건을 빨아들이고 있어!"`
+            },
+
+            {
+                scene: `상자를 멈추려는 ${c}`,
+                action: `${c}은(는) 상자에 적힌 기호를 해석해 보려고 한다.`,
+                dialogue: `"이 기호에 힌트가 있을 거야."`
+            },
+
+            {
+                scene: `상자의 비밀`,
+                action: `기호를 맞추자 상자가 잠시 열리며 안쪽의 모습을 보여준다.`,
+                dialogue: `"안에 있는 건 대체 뭐야?"`
+            },
+
+            {
+                scene: `상자를 완전히 여는 순간`,
+                action: `상자 안에서 예상하지 못한 인물이 나타난다.`,
+                dialogue: `"설마 네가 여기서 나온 거야?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"이 상자를 만든 사람이 바로...?"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           14. 지구 멸망 문자
+        -------------------------------- */
+
+        end: [
+
+            {
+                scene: `${p}`,
+                action: `${c}의 스마트폰에 정체불명의 문자가 도착한다.`,
+                dialogue: `"10분 뒤 지구가 멸망한다고?"`
+            },
+
+            {
+                scene: `믿기 어려운 문자`,
+                action: `처음에는 장난이라고 생각하지만 뉴스에서도 이상한 현상이 나타난다.`,
+                dialogue: `"설마 진짜인 거야?"`
+            },
+
+            {
+                scene: `10분 카운트다운`,
+                action: `스마트폰 화면에 실제로 카운트다운이 시작된다.`,
+                dialogue: `"시간이 줄어들고 있어!"`
+            },
+
+            {
+                scene: `갑자기 나타난 이상 현상`,
+                action: `주변의 하늘과 건물이 이상하게 변하기 시작한다.`,
+                dialogue: `"정말 지구가 위험해!"`
+            },
+
+            {
+                scene: `멸망을 막으려는 ${c}`,
+                action: `${c}은(는) 문자에 적힌 장소로 달려간다.`,
+                dialogue: `"남은 시간 안에 도착해야 해!"`
+            },
+
+            {
+                scene: `마지막 장치`,
+                action: `문자에 적힌 장소에서 지구의 운명을 결정할 장치를 발견한다.`,
+                dialogue: `"이걸 멈추면 되는 건가?"`
+            },
+
+            {
+                scene: `카운트다운 마지막 순간`,
+                action: `${c}이(가) 장치를 작동시키기 직전 새로운 문자가 도착한다.`,
+                dialogue: `"마지막 문자가 왔어..."` 
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"그럼 이 모든 일이 처음부터...?"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           15. 말한 것이 현실이 됨
+        -------------------------------- */
+
+        word: [
+
+            {
+                scene: `${p}`,
+                action: `${c}이(가) 무심코 한 말을 주변에서 그대로 이루어진다.`,
+                dialogue: `"어? 내가 방금 말한 대로 됐잖아!"`
+            },
+
+            {
+                scene: `말이 현실이 되는 능력`,
+                action: `다른 말을 해 보자 실제로 그대로 이루어진다.`,
+                dialogue: `"진짜 내 말이 현실이 되고 있어!"`
+            },
+
+            {
+                scene: `신나게 사용하는 능력`,
+                action: `${c}은(는) 원하는 것을 말하며 능력을 즐기기 시작한다.`,
+                dialogue: `"이 능력 완전 대박인데?"`
+            },
+
+            {
+                scene: `말실수`,
+                action: `실수로 한 말까지 현실이 되면서 상황이 엉망이 된다.`,
+                dialogue: `"잠깐! 그건 진심으로 한 말이 아니야!"`
+            },
+
+            {
+                scene: `문제를 되돌리려는 ${c}`,
+                action: `${c}은(는) 말이 현실이 되는 규칙을 찾아보려고 한다.`,
+                dialogue: `"분명 되돌릴 방법이 있을 거야."`
+            },
+
+            {
+                scene: `말의 규칙 발견`,
+                action: `특정한 말을 해야만 현실을 다시 바꿀 수 있다는 것을 알게 된다.`,
+                dialogue: `"이 말이면 모든 걸 되돌릴 수 있어!"`
+            },
+
+            {
+                scene: `마지막 한마디`,
+                action: `모든 것을 되돌리기 위해 마지막 말을 하려는 순간이다.`,
+                dialogue: `"이번 말은 정말 신중하게 해야 해."`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"내가 만든 이야기가 현실이었다고?!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           16. 초능력
+        -------------------------------- */
+
+        power: [
+
+            {
+                scene: `${p}`,
+                action: `${c}에게 갑자기 이상한 능력이 생긴다.`,
+                dialogue: `"방금 내가 한 일이야?"`
+            },
+
+            {
+                scene: `처음 발견한 초능력`,
+                action: `생각만으로 물건을 움직일 수 있다는 것을 알게 된다.`,
+                dialogue: `"진짜 초능력이잖아!"`
+            },
+
+            {
+                scene: `초능력 사용`,
+                action: `${c}은(는) 능력을 이용해 작은 문제들을 해결한다.`,
+                dialogue: `"이 능력으로 뭐든 할 수 있겠어!"`
+            },
+
+            {
+                scene: `통제되지 않는 능력`,
+                action: `능력이 점점 강해지면서 주변까지 영향을 받기 시작한다.`,
+                dialogue: `"잠깐! 내가 조절할 수가 없어!"`
+            },
+
+            {
+                scene: `능력의 원인을 찾는 ${c}`,
+                action: `${c}은(는) 능력이 처음 생긴 장소를 찾아간다.`,
+                dialogue: `"처음 능력이 생긴 곳에 답이 있을 거야."`
+            },
+
+            {
+                scene: `숨겨진 진실`,
+                action: `그곳에서 자신의 능력과 관련된 이상한 기록을 발견한다.`,
+                dialogue: `"내 능력이 우연히 생긴 게 아니었어?"`
+            },
+
+            {
+                scene: `능력을 없앨 기회`,
+                action: `능력을 없앨 수 있는 마지막 방법을 발견한다.`,
+                dialogue: `"이제 선택해야 해."`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"그럼 이 능력은 대체 뭐였던 거야?!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           17. 전자기기 작동 안 함
+        -------------------------------- */
+
+        electric: [
+
+            {
+                scene: `${p}`,
+                action: `${c}이(가) 스마트폰을 확인한다.`,
+                dialogue: `"배터리가 없나?"`
+            },
+
+            {
+                scene: `갑자기 꺼진 모든 기기`,
+                action: `스마트폰뿐만 아니라 모든 전자기기가 동시에 멈춘다.`,
+                dialogue: `"잠깐... 전부 꺼졌어!"`
+            },
+
+            {
+                scene: `멈춰버린 도시`,
+                action: `신호등과 교통수단까지 멈추면서 혼란이 시작된다.`,
+                dialogue: `"이러면 아무것도 움직일 수 없잖아!"`
+            },
+
+            {
+                scene: `점점 커지는 혼란`,
+                action: `사람들이 전자기기 없이 생활해야 하는 상황에 놓인다.`,
+                dialogue: `"이대로 계속되면 큰일이야."`
+            },
+
+            {
+                scene: `원인을 찾는 ${c}`,
+                action: `${c}은(는) 전자기기가 멈춘 이유를 찾기 시작한다.`,
+                dialogue: `"전부 동시에 멈췄다면 원인이 있을 거야."`
+            },
+
+            {
+                scene: `이상한 신호`,
+                action: `전자기기는 꺼져 있는데 한곳에서만 이상한 신호가 감지된다.`,
+                dialogue: `"저곳에서 뭔가 신호가 나오고 있어!"`
+            },
+
+            {
+                scene: `신호의 근원`,
+                action: `${c}이(가) 신호가 나오는 곳에 도착한다.`,
+                dialogue: `"여기에 모든 답이 있는 것 같아."`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"전자기기가 멈춘 이유가 그거였어?!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           18. 하늘에서 물건
+        -------------------------------- */
+
+        sky: [
+
+            {
+                scene: `${p}`,
+                action: `${c}이(가) 평범한 하루를 보내고 있다.`,
+                dialogue: `"오늘 날씨 좋네."`
+            },
+
+            {
+                scene: `하늘에서 떨어지는 물체`,
+                action: `갑자기 하늘에서 정체불명의 물건이 떨어진다.`,
+                dialogue: `"저게 뭐야?!"`
+            },
+
+            {
+                scene: `수상한 물건`,
+                action: `물건에는 누구도 알아볼 수 없는 문자가 적혀 있다.`,
+                dialogue: `"이런 글자는 처음 보는데..."` 
+            },
+
+            {
+                scene: `물건의 이상한 작동`,
+                action: `${c}이(가) 물건을 만지자 주변의 환경이 변하기 시작한다.`,
+                dialogue: `"내가 만지니까 작동한 거야?"`
+            },
+
+            {
+                scene: `물건의 목적을 찾는 ${c}`,
+                action: `${c}은(는) 물건에 적힌 단서를 이용해 목적을 알아내려고 한다.`,
+                dialogue: `"이 물건이 왜 여기 떨어진 거지?"`
+            },
+
+            {
+                scene: `숨겨진 기능`,
+                action: `물건이 하늘을 향해 신호를 보내기 시작한다.`,
+                dialogue: `"누군가에게 신호를 보내고 있어!"`
+            },
+
+            {
+                scene: `하늘에 나타난 답`,
+                action: `하늘에 거대한 무언가가 나타난다.`,
+                dialogue: `"설마 저게 이 물건의 주인?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"처음부터 우리를 구하려고 온 거였다고?!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           19. 미래의 메시지
+        -------------------------------- */
+
+        future: [
+
+            {
+                scene: `${p}`,
+                action: `${c}에게 정체불명의 메시지가 도착한다.`,
+                dialogue: `"보낸 사람이... 미래의 나라고?"`
+            },
+
+            {
+                scene: `미래의 모습`,
+                action: `메시지에는 앞으로 일어날 위험한 사건이 담겨 있다.`,
+                dialogue: `"이 일이 정말 일어나는 거야?"`
+            },
+
+            {
+                scene: `미래를 바꾸려는 ${c}`,
+                action: `${c}은(는) 메시지를 이용해 미래의 사건을 막으려 한다.`,
+                dialogue: `"이번에는 미래를 바꿀 거야!"`
+            },
+
+            {
+                scene: `계속 바뀌는 미래`,
+                action: `행동할 때마다 미래의 메시지 내용도 달라진다.`,
+                dialogue: `"내가 움직일수록 미래가 바뀌고 있어!"`
+            },
+
+            {
+                scene: `마지막 메시지`,
+                action: `미래의 자신이 마지막으로 한 가지 행동을 지시한다.`,
+                dialogue: `"이것만 하면 되는 건가?"`
+            },
+
+            {
+                scene: `메시지의 숨겨진 의미`,
+                action: `지금까지 받은 메시지들을 연결하자 새로운 사실이 드러난다.`,
+                dialogue: `"처음 메시지부터 다시 봐야 해!"`
+            },
+
+            {
+                scene: `미래의 나를 만나기 직전`,
+                action: `${c}은(는) 메시지를 보낸 미래의 자신과 연결되는 장소에 도착한다.`,
+                dialogue: `"드디어 만나게 되는 건가?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"그럼 이 메시지는 누가 보낸 거야?!"`
+            }
+
+        ],
+
+
+        /* --------------------------------
+           20. 비밀 통로
+        -------------------------------- */
+
+        secret: [
+
+            {
+                scene: `${p}`,
+                action: `${c}이(가) 우연히 아무도 모르는 문을 발견한다.`,
+                dialogue: `"여기에 이런 문이 있었어?"`
+            },
+
+            {
+                scene: `숨겨진 비밀 통로`,
+                action: `문을 열자 아무도 모르는 긴 통로가 나타난다.`,
+                dialogue: `"안으로 들어가 볼까?"`
+            },
+
+            {
+                scene: `통로 안쪽`,
+                action: `${c}은(는) 통로를 따라가며 이상한 흔적을 발견한다.`,
+                dialogue: `"누군가 여기를 사용하고 있었어."`
+            },
+
+            {
+                scene: `점점 깊어지는 통로`,
+                action: `통로가 예상보다 훨씬 깊고 복잡하다는 사실을 알게 된다.`,
+                dialogue: `"대체 어디까지 이어지는 거야?"`
+            },
+
+            {
+                scene: `비밀 장소를 찾는 ${c}`,
+                action: `${c}은(는) 흔적을 따라 통로 끝까지 가기로 한다.`,
+                dialogue: `"끝까지 가 보면 답이 나올 거야."`
+            },
+
+            {
+                scene: `숨겨진 방`,
+                action: `통로 끝에서 오래된 기록과 이상한 물건이 있는 방을 발견한다.`,
+                dialogue: `"여기서 무슨 일이 있었던 거지?"`
+            },
+
+            {
+                scene: `기록 속의 충격적인 내용`,
+                action: `기록에는 지금까지의 사건과 관련된 내용이 적혀 있다.`,
+                dialogue: `"설마 이 사건을 알고 있었던 거야?"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"처음부터 이 통로가 그걸 위해 있었던 거야?!"`
+            }
+
+        ]
+
+    };
+
+
+    /*
+     * 해당 사건의 패턴 가져오기
+     */
+
+    let story =
+        stories[type];
+
+
+    /*
+     * 혹시 정의되지 않은 사건이 생기더라도
+     * 기본 구조 사용
+     */
+
+    if (!story) {
+
+        story = [
+
+            {
+                scene: `${p}`,
+                action: `${c}이(가) 평범한 하루를 보내고 있다.`,
+                dialogue: `"오늘은 별일 없겠지?"`
+            },
+
+            {
+                scene: `${p}에서 이상한 일이 발생한다.`,
+                action: `${e}.`,
+                dialogue: `"잠깐, 무슨 일이야?"`
+            },
+
+            {
+                scene: `점점 커지는 사건`,
+                action: `상황이 예상보다 크게 번지기 시작한다.`,
+                dialogue: `"이대로는 안 되겠어!"`
+            },
+
+            {
+                scene: `문제 해결을 위한 행동`,
+                action: `${c}이(가) 직접 문제를 해결하려고 움직인다.`,
+                dialogue: `"내가 직접 확인해 볼게."`
+            },
+
+            {
+                scene: `해결 직전`,
+                action: `마침내 사건의 원인을 알아낸다.`,
+                dialogue: `"이제 알겠어!"`
+            },
+
+            {
+                scene: `충격적인 반전`,
+                action: `${t}.`,
+                dialogue: `"뭐라고?!"`
+            },
+
+            {
+                scene: `새로운 진실`,
+                action: `반전의 의미를 깨닫는다.`,
+                dialogue: `"그럼 지금까지 전부 연결되어 있었던 거야?"`
+            },
+
+            {
+                scene: `마지막 장면`,
+                action: `새로운 이야기가 시작될 것 같은 순간.`,
+                dialogue: `"이제부터가 진짜 시작이야!"`
+            }
+
+        ];
+
+    }
+
+
+    /*
+     * 4컷
+     *
+     * 상황 → 사건 → 문제 → 반전
+     */
+
+    if (count === 4) {
+
+        return [
+
+            story[0],
+            story[2],
+            story[4],
+            story[7]
+
+        ];
+
+    }
+
+
+    /*
+     * 6컷
+     *
+     * ① 상황
+     * ② 등장
+     * ③ 사건
+     * ④ 문제 확대
+     * ⑤ 해결 시도
+     * ⑥ 반전
+     */
+
+    if (count === 6) {
+
+        return [
+
+            story[0],
+            story[1],
+            story[2],
+            story[3],
+            story[4],
+            story[7]
+
+        ];
+
+    }
+
+
+    /*
+     * 8컷
+     *
+     * 사건의 흐름을 가장 자세하게 보여줌
+     */
+
+    return story;
+
+}
+
+
+/* ==================================================
+   설정 화면
+================================================== */
+
+function showSetting() {
+
+    document.getElementById(
+        "storyResult"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "storySetting"
+    ).style.display = "block";
+
+
+    window.scrollTo({
+
+        top:
+            document.getElementById(
+                "storySetting"
+            ).offsetTop - 20,
+
+        behavior: "smooth"
+
+    });
+
+}
+
+
+/* ==================================================
+   처음부터 다시
+================================================== */
+
+function resetGame() {
+
+    selected = {
+        place: "",
+        character: "",
+        event: "",
+        twist: ""
+    };
+
+
+    document
+        .querySelectorAll(".card")
+        .forEach(card => {
+
+            card.classList.remove("flipped");
+            card.classList.remove("roulette");
+
+        });
+
+
+    document.getElementById(
+        "placeResult"
+    ).textContent = "";
+
+
+    document.getElementById(
+        "characterResult"
+    ).textContent = "";
+
+
+    document.getElementById(
+        "eventResult"
+    ).textContent = "";
+
+
+    document.getElementById(
+        "twistResult"
+    ).textContent = "";
+
+
+    document.getElementById(
+        "storyPlace"
+    ).textContent = "";
+
+
+    document.getElementById(
+        "storyCharacter"
+    ).textContent = "";
+
+
+    document.getElementById(
+        "storyEvent"
+    ).textContent = "";
+
+
+    document.getElementById(
+        "storyTwist"
+    ).textContent = "";
+
+
+    document.getElementById(
+        "myStory"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "storySetting"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "storyResult"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "drawButton"
+    ).disabled = false;
+
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+}
+
+</script>
+
+</body>
+</html>
